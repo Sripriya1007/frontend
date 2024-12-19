@@ -25,10 +25,10 @@ function AddEmployee() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let ss;
+   
 
     try {
-      const response = await axios.post('http://backend:5000/employees', formData);
+      const response = await axios.post('http://localhost:5001/employees', formData);
       setSuccess(response.data.message || 'Employee added successfully!');
       setError('');
       setFormData({
@@ -43,7 +43,7 @@ function AddEmployee() {
     } catch (err) {
       console.error('Error Details:', err.response || err.message);
       setError(err.response?.data?.error || 'Something went wrong. Please try again.');
-    }
+    }    
 };
 
 
