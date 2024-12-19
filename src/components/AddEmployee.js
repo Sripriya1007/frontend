@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './AddEmployee.css'; 
+import './AddEmployee.css';
 
 function AddEmployee() {
   const [formData, setFormData] = useState({
@@ -14,21 +14,32 @@ function AddEmployee() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const departments = ['HR', 'Engineering', 'Marketing', 'Finance'];
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === 'phone_number' && isNaN(value)) {
+      setError('Phone number must be numeric.');
+      return;
+    }
+
+    setFormData({ ...formData, [name]: value });
     setError('');
     setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-   
+    setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5001/employees', formData);
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/employees`,
+        formData
+      );
       setSuccess(response.data.message || 'Employee added successfully!');
       setError('');
       setFormData({
@@ -42,10 +53,17 @@ function AddEmployee() {
       });
     } catch (err) {
       console.error('Error Details:', err.response || err.message);
-      setError(err.response?.data?.error || 'Something went wrong. Please try again.');
-    }    
-};
-
+      if (err.response?.status === 400) {
+        setError(err.response.data.error || 'Invalid input.');
+      } else if (err.response?.status === 500) {
+        setError('Server error. Please try again later.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleReset = () => {
     setFormData({
@@ -65,14 +83,19 @@ function AddEmployee() {
     <div className="form-container">
       <h2>Employee Management Form</h2>
       <form onSubmit={handleSubmit}>
+        <label htmlFor="name">Name</label>
         <input
+          id="name"
           name="name"
           placeholder="Name"
           value={formData.name}
           onChange={handleChange}
           required
         />
+
+        <label htmlFor="employee_id">Employee ID</label>
         <input
+          id="employee_id"
           name="employee_id"
           placeholder="Employee ID"
           value={formData.employee_id}
@@ -80,7 +103,10 @@ function AddEmployee() {
           maxLength="10"
           required
         />
+
+        <label htmlFor="email">Email</label>
         <input
+          id="email"
           type="email"
           name="email"
           placeholder="Email"
@@ -88,7 +114,10 @@ function AddEmployee() {
           onChange={handleChange}
           required
         />
+
+        <label htmlFor="phone_number">Phone Number</label>
         <input
+          id="phone_number"
           name="phone_number"
           placeholder="Phone Number"
           value={formData.phone_number}
@@ -96,7 +125,10 @@ function AddEmployee() {
           maxLength="10"
           required
         />
+
+        <label htmlFor="department">Department</label>
         <select
+          id="department"
           name="department"
           value={formData.department}
           onChange={handleChange}
@@ -109,7 +141,10 @@ function AddEmployee() {
             </option>
           ))}
         </select>
+
+        <label htmlFor="date_of_joining">Date of Joining</label>
         <input
+          id="date_of_joining"
           type="date"
           name="date_of_joining"
           placeholder="Date of Joining"
@@ -117,14 +152,20 @@ function AddEmployee() {
           onChange={handleChange}
           required
         />
+
+        <label htmlFor="role">Role</label>
         <input
+          id="role"
           name="role"
           placeholder="Role"
           value={formData.role}
           onChange={handleChange}
           required
         />
-        <button type="submit" className="submit-btn">Submit</button>
+
+        <button type="submit" className="submit-btn" disabled={loading}>
+          {loading ? 'Submitting...' : 'Submit'}
+        </button>
         <button type="button" className="reset-btn" onClick={handleReset}>
           Reset
         </button>
